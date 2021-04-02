@@ -1,0 +1,139 @@
+version: "3.7"
+
+services:
+  db:
+    image: "xivoxc/xivo-db:${XIVOCC_TAG}.${XIVOCC_DIST}"
+
+    ports:
+    - 5432:5432
+
+    extra_hosts:
+    - xivo:${XIVO_HOST}
+
+    environment:
+    - POSTGRES_PASSWORD=proformatique
+    - IS_MDS
+    - MDS_NAME
+
+    volumes:
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+    - /etc/passwd:/etc/passwd:ro
+    - /etc/group:/etc/group:ro
+    - /var/log/postgresql:/var/log/postgresql
+    - /var/lib/postgresql/11:/var/lib/postgresql/11
+    - /run/postgresql:/run/postgresql
+
+    restart: always
+
+  agid:
+    image: "xivoxc/xivo-agid:${XIVOCC_TAG}.${XIVOCC_DIST}"
+
+    ports:
+    - 4573:4573
+
+    extra_hosts:
+    - xivo:${XIVO_HOST}
+
+    environment:
+    - MDS_NAME
+
+    volumes:
+    - /var/lib/xivo-auth-keys/xivo-agid-key.yml:/var/lib/xivo-auth-keys/xivo-agid-key.yml
+    - /etc/xivo/asterisk/:/etc/xivo/asterisk/
+    - /etc/xivo/mail.txt:/etc/xivo/mail.txt
+    - /var/log/xivo-agid:/var/log/
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+
+    restart: always
+
+  confgend:
+    image: "xivoxc/xivo-confgend:${XIVOCC_TAG}.${XIVOCC_DIST}"
+
+    ports:
+    - 8669:8669
+
+    extra_hosts:
+    - xivo:${XIVO_HOST}
+
+    environment:
+    - IS_MDS
+    - MDS_NAME
+
+    volumes:
+    - /var/log/xivo-confgend:/var/log/
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+
+    restart: always
+
+  rabbitmq:
+    user: "${RABBITMQ_UID}"
+
+    image: "xivoxc/rabbitmq:${XIVOCC_TAG}.${XIVOCC_DIST}"
+
+    ports:
+    - 4369:4369
+    - 5671:5671
+    - 5672:5672
+    - 127.0.0.1:15672:15672
+
+    extra_hosts:
+    - xivo:${XIVO_HOST}
+
+    environment:
+    - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/mds/rabbitmq
+
+    volumes:
+    - /var/log/rabbitmq/:/var/log/rabbitmq/
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+
+    restart: always
+
+  db_replic:
+    image: "xivoxc/xivo-db-replication:${XIVOCC_TAG}.${XIVOCC_DIST}"
+
+    environment:
+    - JAVA_OPTS=-Xms64m -Xmx256m
+    - ELASTICSEARCH
+    - ELASTICTTL
+    - ELASTICCLUSTER
+    - DISABLEELASTIC
+    - DB_HOST
+    - REPORTING_DB_HOST
+    - REPORTING_DATABASE_NAME
+    - IS_MDS
+
+    volumes:
+    - /var/log/xivo-db-replication/:/opt/docker/var/log/xivo-db-replication/
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+
+    restart: always
+
+  outcall:
+    image: "xivoxc/xivo-outcall:${XIVOCC_TAG}.${XIVOCC_DIST}"
+
+    environment:
+    - JAVA_OPTS=-Xms64m -Xmx128m
+    - MDS_HOST
+    - XIVO_HOST
+    - ARI_USERNAME
+    - ARI_PASSWORD
+    - MDS_NAME
+
+    volumes:
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+    - /var/log/xivo-outcall:/var/log/xivo-outcall
+
+    restart: always
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+      - subnet: ${DOCKER_NET}
