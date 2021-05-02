@@ -39,12 +39,12 @@ services:
     - /etc/timezone:/etc/timezone:ro
     - /etc/localtime:/etc/localtime:ro
     - ~/etc/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:rw
-    - ~/etc/logstash/conf.d/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:rw
+    - ~/etc/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:rw
 #    - ~/etc/logstash/jvm.options:/usr/share/logstash/config/jvm.options:rw
-#    - ~/etc/logstash/pipeline.yml:/usr/share/logstash/config/pipeline.yml
+    - ~/etc/logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml
 #    - ~/etc/logstash/log4j2.properties:/usr/share/logstash/config/log4j2.properties
 #    - ~/etc/logstash/startup.options:/usr/share/logstash/config/startup.options
-
+    - /var/log/asterisk/full:/var/log/asterisk/full:ro
     command: "logstash -f /usr/share/logstash/pipeline/logstash.conf"
 
     restart: always
